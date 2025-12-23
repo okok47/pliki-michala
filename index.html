@@ -2,41 +2,41 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Epstein Files</title>
+<title>Flying Videos FIX</title>
 
 <style>
-    body {
-        margin: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        animation: bg 1s infinite alternate;
-    }
+body {
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    animation: bg 1s infinite alternate;
+}
 
-    @keyframes bg {
-        0% { background: red; }
-        25% { background: yellow; }
-        50% { background: lime; }
-        75% { background: cyan; }
-        100% { background: magenta; }
-    }
+@keyframes bg {
+    0% { background:red }
+    25% { background:yellow }
+    50% { background:lime }
+    75% { background:cyan }
+    100% { background:magenta }
+}
 
-    video {
-        position: absolute;
-        width: 240px;
-        pointer-events: none;
-    }
+video {
+    position: absolute;
+    width: 220px;
+    pointer-events: none;
+}
 
-    #start {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 24px;
-        padding: 20px 40px;
-        cursor: pointer;
-        z-index: 9999;
-    }
+button {
+    position: fixed;
+    z-index: 9999;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    padding: 20px 40px;
+    cursor: pointer;
+}
 </style>
 </head>
 
@@ -44,37 +44,39 @@
 
 <button id="start">▶ START</button>
 
-<audio id="music" src="muzyka.mp3" loop></audio>
+<audio id="music" src="muzyka.mp3" preload="auto" loop></audio>
 
-<video src="film1.mp4" muted loop></video>
-<video src="film2.mp4" muted loop></video>
-<video src="film3.mp4" muted loop></video>
-<video src="film4.mp4" muted loop></video>
+<video src="film1.mp4" muted loop preload="auto"></video>
+<video src="film2.mp4" muted loop preload="auto"></video>
+<video src="film3.mp4" muted loop preload="auto"></video>
+<video src="film4.mp4" muted loop preload="auto"></video>
 
 <script>
 const videos = document.querySelectorAll("video");
 const music = document.getElementById("music");
-const startBtn = document.getElementById("start");
+const btn = document.getElementById("start");
 
-function randomMove(el) {
-    const maxX = window.innerWidth - el.offsetWidth;
-    const maxY = window.innerHeight - el.offsetHeight;
-
-    const x = Math.random() * maxX;
-    const y = Math.random() * maxY;
-
-    el.style.transition = "transform 10s linear";
+function move(el) {
+    const x = Math.random() * (window.innerWidth - el.offsetWidth);
+    const y = Math.random() * (window.innerHeight - el.offsetHeight);
+    el.style.transition = "transform 15s linear";
     el.style.transform = `translate(${x}px, ${y}px)`;
 }
 
-startBtn.onclick = () => {
-    startBtn.remove();
-    music.play();
+btn.onclick = async () => {
+    btn.remove();
+
+    try {
+        await music.play();
+        console.log("MUZYKA OK");
+    } catch (e) {
+        console.error("MUZYKA ERROR", e);
+    }
 
     videos.forEach(v => {
-        v.play();
-        randomMove(v);
-        setInterval(() => randomMove(v), 10000);
+        v.play().catch(err => console.error("VIDEO ERROR", v.src, err));
+        move(v);
+        setInterval(() => move(v), 15000);
     });
 };
 </script>
