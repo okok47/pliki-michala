@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Pliki Michała Dihowego</title>
+<title>epstein files</title></title>
 
 <style>
 html, body {
@@ -13,7 +13,6 @@ html, body {
     overflow: hidden;
 }
 
-/* migające tło */
 body {
     animation: bg 4s linear infinite;
 }
@@ -28,7 +27,7 @@ body {
 
 video {
     position: absolute;
-    width: 300px; /* WIĘKSZE */
+    width: 280px;
     pointer-events: none;
 }
 </style>
@@ -36,27 +35,26 @@ video {
 
 <body>
 
-<!-- MUZYKA -->
 <audio id="music" src="muzyka.mp3" loop></audio>
 
-<video src="film1.mov" autoplay loop muted playsinline></video>
-<video src="film2.mov" autoplay loop muted playsinline></video>
-<video src="film3.mov" autoplay loop muted playsinline></video>
-<video src="film4.mov" autoplay loop muted playsinline></video>
+<video src="film1.mp4" autoplay loop muted playsinline></video>
+<video src="film2.mp4" autoplay loop muted playsinline></video>
+<video src="film3.mp4" autoplay loop muted playsinline></video>
+<video src="film4.mp4" autoplay loop muted playsinline></video>
 
 <script>
-const videos = Array.from(document.querySelectorAll("video"));
-const size = 300;
+const videos = [...document.querySelectorAll("video")];
+const size = 280;
 
-const objects = videos.map(video => ({
-    video,
+const objs = videos.map(v => ({
+    v,
     x: Math.random() * (window.innerWidth - size),
     y: Math.random() * (window.innerHeight - size),
-    dx: (Math.random() - 0.5) * 1.2, // SZYBCIEJ
-    dy: (Math.random() - 0.5) * 1.2
+    dx: (Math.random() < 0.5 ? -1 : 1) * 1.5,
+    dy: (Math.random() < 0.5 ? -1 : 1) * 1.5
 }));
 
-function collide(a, b) {
+function overlap(a, b) {
     return (
         a.x < b.x + size &&
         a.x + size > b.x &&
@@ -65,39 +63,42 @@ function collide(a, b) {
     );
 }
 
-function animate() {
-    objects.forEach((obj, i) => {
-        obj.x += obj.dx;
-        obj.y += obj.dy;
+function loop() {
+    for (let i = 0; i < objs.length; i++) {
+        let o = objs[i];
+
+        o.x += o.dx;
+        o.y += o.dy;
 
         // odbicie od ścian
-        if (obj.x <= 0 || obj.x >= window.innerWidth - size) obj.dx *= -1;
-        if (obj.y <= 0 || obj.y >= window.innerHeight - size) obj.dy *= -1;
+        if (o.x <= 0 || o.x >= window.innerWidth - size) o.dx *= -1;
+        if (o.y <= 0 || o.y >= window.innerHeight - size) o.dy *= -1;
 
-        // kolizje między filmami
-        objects.forEach((other, j) => {
-            if (i !== j && collide(obj, other)) {
-                obj.dx *= -1;
-                obj.dy *= -1;
-                other.dx *= -1;
-                other.dy *= -1;
+        // kolizje
+        for (let j = i + 1; j < objs.length; j++) {
+            let p = objs[j];
+            if (overlap(o, p)) {
+                o.dx *= -1;
+                o.dy *= -1;
+                p.dx *= -1;
+                p.dy *= -1;
             }
-        });
+        }
 
-        obj.video.style.left = obj.x + "px";
-        obj.video.style.top = obj.y + "px";
-    });
+        o.v.style.left = o.x + "px";
+        o.v.style.top = o.y + "px";
+    }
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(loop);
 }
 
-animate();
+loop();
 
-/* 🔊 MUZYKA – startuje PO PIERWSZYM KLIKNIĘCIU (WYMUSZONE) */
+// MUZYKA – rusza po kliknięciu
 document.addEventListener("click", () => {
-    const music = document.getElementById("music");
-    music.volume = 1.0;
-    music.play().catch(() => {});
+    const m = document.getElementById("music");
+    m.volume = 1;
+    m.play();
 }, { once: true });
 </script>
 
