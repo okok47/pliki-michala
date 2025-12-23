@@ -2,100 +2,81 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Pliki Epsteina</title>
+<title>Epstein Files</title>
+
 <style>
     body {
         margin: 0;
+        width: 100vw;
         height: 100vh;
         overflow: hidden;
-        animation: kolory 5s infinite alternate;
+        animation: bg 1s infinite alternate;
     }
 
-    @keyframes kolory {
-        0%   { background: red; }
-        20%  { background: orange; }
-        40%  { background: yellow; }
-        60%  { background: lime; }
-        80%  { background: cyan; }
+    @keyframes bg {
+        0% { background: red; }
+        25% { background: yellow; }
+        50% { background: lime; }
+        75% { background: cyan; }
         100% { background: magenta; }
     }
 
     video {
         position: absolute;
-        width: 300px;
-        height: 200px;
-        border-radius: 20px;
-        object-fit: cover;
+        width: 240px;
+        pointer-events: none;
     }
 
-    #playAudioBtn {
+    #start {
         position: fixed;
-        top: 20px;
-        left: 20px;
-        padding: 10px 20px;
-        font-size: 16px;
-        z-index: 1000;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        padding: 20px 40px;
         cursor: pointer;
+        z-index: 9999;
     }
 </style>
 </head>
+
 <body>
 
-<button id="playAudioBtn">Odtwórz muzykę</button>
-<audio id="muzyka" src="muzyka.mp3" loop></audio>
+<button id="start">▶ START</button>
 
-<video id="film1" src="film1.mp4" autoplay loop muted></video>
-<video id="film2" src="film2.mp4" autoplay loop muted></video>
-<video id="film3" src="film3.mp4" autoplay loop muted></video>
-<video id="film4" src="film4.mp4" autoplay loop muted></video>
+<audio id="music" src="muzyka.mp3" loop></audio>
+
+<video src="film1.mp4" muted loop></video>
+<video src="film2.mp4" muted loop></video>
+<video src="film3.mp4" muted loop></video>
+<video src="film4.mp4" muted loop></video>
 
 <script>
-const videos = [
-    document.getElementById('film1'),
-    document.getElementById('film2'),
-    document.getElementById('film3'),
-    document.getElementById('film4')
-];
+const videos = document.querySelectorAll("video");
+const music = document.getElementById("music");
+const startBtn = document.getElementById("start");
 
-// ustawienia filmików
-const positions = videos.map(() => ({
-    top: Math.random() * (window.innerHeight - 200),
-    left: Math.random() * (window.innerWidth - 300),
-    dx: (Math.random() - 0.5) * 1, // powolny ruch poziomy
-    dy: (Math.random() - 0.5) * 1  // powolny ruch pionowy
-}));
+function randomMove(el) {
+    const maxX = window.innerWidth - el.offsetWidth;
+    const maxY = window.innerHeight - el.offsetHeight;
 
-// ustawienie początkowych pozycji
-videos.forEach((v, i) => {
-    v.style.top = positions[i].top + 'px';
-    v.style.left = positions[i].left + 'px';
-});
+    const x = Math.random() * maxX;
+    const y = Math.random() * maxY;
 
-// funkcja ruchu
-function moveVideos() {
-    videos.forEach((v, i) => {
-        let pos = positions[i];
-        pos.top += pos.dy;
-        pos.left += pos.dx;
-
-        // odbicie od krawędzi
-        if(pos.top <=0 || pos.top + 200 >= window.innerHeight) pos.dy *= -1;
-        if(pos.left <=0 || pos.left + 300 >= window.innerWidth) pos.dx *= -1;
-
-        v.style.top = pos.top + 'px';
-        v.style.left = pos.left + 'px';
-    });
-    requestAnimationFrame(moveVideos);
+    el.style.transition = "transform 10s linear";
+    el.style.transform = `translate(${x}px, ${y}px)`;
 }
 
-moveVideos();
+startBtn.onclick = () => {
+    startBtn.remove();
+    music.play();
 
-// przycisk odtwarzania muzyki
-document.getElementById('playAudioBtn').addEventListener('click', () => {
-    const audio = document.getElementById('muzyka');
-    audio.play().catch(() => alert("Kliknij jeszcze raz, aby odtworzyć muzykę."));
-    document.getElementById('playAudioBtn').style.display = 'none';
-});
+    videos.forEach(v => {
+        v.play();
+        randomMove(v);
+        setInterval(() => randomMove(v), 10000);
+    });
+};
 </script>
 
 </body>
