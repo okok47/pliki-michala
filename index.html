@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Pliki Epsteina</title>
-
 <style>
     body {
         margin: 0;
@@ -24,6 +23,7 @@
     video {
         position: absolute;
         width: 300px;
+        height: 200px;
         border-radius: 20px;
         object-fit: cover;
     }
@@ -39,7 +39,6 @@
     }
 </style>
 </head>
-
 <body>
 
 <button id="playAudioBtn">Odtwórz muzykę</button>
@@ -58,57 +57,43 @@ const videos = [
     document.getElementById('film4')
 ];
 
-const positions = [];
+// ustawienia filmików
+const positions = videos.map(() => ({
+    top: Math.random() * (window.innerHeight - 200),
+    left: Math.random() * (window.innerWidth - 300),
+    dx: (Math.random() - 0.5) * 1, // powolny ruch poziomy
+    dy: (Math.random() - 0.5) * 1  // powolny ruch pionowy
+}));
 
-// Poczekaj aż wszystkie filmy się wczytają
-let loadedCount = 0;
+// ustawienie początkowych pozycji
 videos.forEach((v, i) => {
-    v.onloadedmetadata = () => {
-        loadedCount++;
-        const w = v.videoWidth || 300;
-        const h = v.videoHeight || 300;
-        // ustawienie początkowej losowej pozycji
-        positions[i] = {
-            top: Math.random() * (window.innerHeight - h),
-            left: Math.random() * (window.innerWidth - w),
-            width: w,
-            height: h,
-            dx: (Math.random() - 0.5) * 1, // prędkość pozioma
-            dy: (Math.random() - 0.5) * 1  // prędkość pionowa
-        };
-        v.style.top = positions[i].top + 'px';
-        v.style.left = positions[i].left + 'px';
-        v.style.width = positions[i].width + 'px';
-        v.style.height = positions[i].height + 'px';
-
-        if (loadedCount === videos.length) moveVideos(); // start ruchu po wczytaniu wszystkich
-    };
+    v.style.top = positions[i].top + 'px';
+    v.style.left = positions[i].left + 'px';
 });
 
+// funkcja ruchu
 function moveVideos() {
     videos.forEach((v, i) => {
         let pos = positions[i];
-
         pos.top += pos.dy;
         pos.left += pos.dx;
 
-        // Odbicie od krawędzi
-        if (pos.top <= 0 || pos.top + pos.height >= window.innerHeight) pos.dy *= -1;
-        if (pos.left <= 0 || pos.left + pos.width >= window.innerWidth) pos.dx *= -1;
+        // odbicie od krawędzi
+        if(pos.top <=0 || pos.top + 200 >= window.innerHeight) pos.dy *= -1;
+        if(pos.left <=0 || pos.left + 300 >= window.innerWidth) pos.dx *= -1;
 
         v.style.top = pos.top + 'px';
         v.style.left = pos.left + 'px';
     });
-
     requestAnimationFrame(moveVideos);
 }
 
-// przycisk do odtwarzania muzyki
+moveVideos();
+
+// przycisk odtwarzania muzyki
 document.getElementById('playAudioBtn').addEventListener('click', () => {
     const audio = document.getElementById('muzyka');
-    audio.play().catch(() => {
-        alert('Kliknij jeszcze raz, aby odtworzyć muzykę.');
-    });
+    audio.play().catch(() => alert("Kliknij jeszcze raz, aby odtworzyć muzykę."));
     document.getElementById('playAudioBtn').style.display = 'none';
 });
 </script>
