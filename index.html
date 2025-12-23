@@ -2,23 +2,27 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Flying Videos FIX</title>
+<title>STRONA</title>
 
 <style>
-body {
+html, body {
     margin: 0;
-    width: 100vw;
-    height: 100vh;
+    padding: 0;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
-    animation: bg 1s infinite alternate;
+}
+
+body {
+    animation: bg 5s infinite linear;
 }
 
 @keyframes bg {
-    0% { background:red }
-    25% { background:yellow }
-    50% { background:lime }
-    75% { background:cyan }
-    100% { background:magenta }
+    0% { background: red; }
+    25% { background: blue; }
+    50% { background: green; }
+    75% { background: purple; }
+    100% { background: red; }
 }
 
 video {
@@ -27,60 +31,70 @@ video {
     pointer-events: none;
 }
 
-button {
+/* ekran startowy */
+#start {
     position: fixed;
-    z-index: 9999;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 24px;
-    padding: 20px 40px;
+    inset: 0;
+    background: black;
+    color: white;
+    font-size: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    z-index: 9999;
 }
 </style>
 </head>
 
 <body>
 
-<button id="start">▶ START</button>
+<div id="start">KLIKNIJ ABY START</div>
 
-<audio id="music" src="muzyka.mp3" preload="auto" loop></audio>
+<audio id="music" src="muzyka.mp3" loop></audio>
 
-<video src="film1.mov" muted loop preload="auto"></video>
-<video src="film2.mov" muted loop preload="auto"></video>
-<video src="film3.mov" muted loop preload="auto"></video>
-<video src="film4.mov" muted loop preload="auto"></video>
+<video src="film1.mp4" loop muted playsinline></video>
+<video src="film2.mp4" loop muted playsinline></video>
+<video src="film3.mp4" loop muted playsinline></video>
+<video src="film4.mp4" loop muted playsinline></video>
 
 <script>
 const videos = document.querySelectorAll("video");
-const music = document.getElementById("music");
-const btn = document.getElementById("start");
 
-function move(el) {
-    const x = Math.random() * (window.innerWidth - el.offsetWidth);
-    const y = Math.random() * (window.innerHeight - el.offsetHeight);
-    el.style.transition = "transform 15s linear";
-    el.style.transform = `translate(${x}px, ${y}px)`;
-}
+videos.forEach(video => {
+    let x = Math.random() * (window.innerWidth - 220);
+    let y = Math.random() * (window.innerHeight - 160);
+    let dx = (Math.random() - 0.5) * 0.4;
+    let dy = (Math.random() - 0.5) * 0.4;
 
-btn.onclick = async () => {
-    btn.remove();
+    video.play();
 
-    try {
-        await music.play();
-        console.log("MUZYKA OK");
-    } catch (e) {
-        console.error("MUZYKA ERROR", e);
+    function move() {
+        x += dx;
+        y += dy;
+
+        if (x <= 0 || x >= window.innerWidth - 220) dx *= -1;
+        if (y <= 0 || y >= window.innerHeight - 160) dy *= -1;
+
+        video.style.left = x + "px";
+        video.style.top = y + "px";
+
+        requestAnimationFrame(move);
     }
 
-    videos.forEach(v => {
-        v.play().catch(err => console.error("VIDEO ERROR", v.src, err));
-        move(v);
-        setInterval(() => move(v), 15000);
-    });
-};
+    move();
+});
+
+// START audio — TO DZIAŁA
+document.getElementById("start").addEventListener("click", () => {
+    const music = document.getElementById("music");
+    music.volume = 1.0;
+    music.muted = false;
+    music.play();
+
+    document.getElementById("start").remove();
+});
 </script>
 
 </body>
 </html>
-
