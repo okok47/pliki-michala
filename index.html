@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Michał Files</title>
+<title>Michał PDF Files</title>
 
 <style>
     body {
@@ -58,40 +58,54 @@ const videos = [
     document.getElementById('film4')
 ];
 
-// ustawienie początkowej losowej pozycji
-videos.forEach(v => {
-    v.style.top = Math.random() * (window.innerHeight - 300) + 'px';
-    v.style.left = Math.random() * (window.innerWidth - 300) + 'px';
-});
-
-// ruch filmików
-function moveVideos() {
+function startMovingVideos() {
     videos.forEach(v => {
-        let top = parseFloat(v.style.top);
-        let left = parseFloat(v.style.left);
-
-        top += (Math.random() - 0.5) * 1.5; // wolny ruch
-        left += (Math.random() - 0.5) * 1.5;
-
-        top = Math.max(0, Math.min(window.innerHeight - v.offsetHeight, top));
-        left = Math.max(0, Math.min(window.innerWidth - v.offsetWidth, left));
-
-        v.style.top = top + 'px';
-        v.style.left = left + 'px';
+        // ustawienie początkowej losowej pozycji
+        const w = v.videoWidth || 300;
+        const h = v.videoHeight || 300;
+        v.style.top = Math.random() * (window.innerHeight - h) + 'px';
+        v.style.left = Math.random() * (window.innerWidth - w) + 'px';
     });
 
-    requestAnimationFrame(moveVideos);
+    function moveVideos() {
+        videos.forEach(v => {
+            let top = parseFloat(v.style.top);
+            let left = parseFloat(v.style.left);
+
+            top += (Math.random() - 0.5) * 1.2; // wolny ruch
+            left += (Math.random() - 0.5) * 1.2;
+
+            top = Math.max(0, Math.min(window.innerHeight - v.offsetHeight, top));
+            left = Math.max(0, Math.min(window.innerWidth - v.offsetWidth, left));
+
+            v.style.top = top + 'px';
+            v.style.left = left + 'px';
+        });
+
+        requestAnimationFrame(moveVideos);
+    }
+
+    moveVideos();
 }
 
-moveVideos();
+// Poczekaj aż wszystkie filmy się wczytają
+let loadedCount = 0;
+videos.forEach(v => {
+    v.onloadedmetadata = () => {
+        loadedCount++;
+        if (loadedCount === videos.length) startMovingVideos();
+    };
+});
 
 // przycisk do odtwarzania muzyki
 document.getElementById('playAudioBtn').addEventListener('click', () => {
-    document.getElementById('muzyka').play();
+    const audio = document.getElementById('muzyka');
+    audio.play().catch(err => {
+        alert('Nie udało się odtworzyć muzyki. Spróbuj kliknąć jeszcze raz.');
+    });
     document.getElementById('playAudioBtn').style.display = 'none'; // ukrycie przycisku
 });
 </script>
 
 </body>
 </html>
-
