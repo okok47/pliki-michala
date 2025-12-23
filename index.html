@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Michał PDF Files</title>
+<title>Epstein Files</title>
 
 <style>
     body {
@@ -58,52 +58,58 @@ const videos = [
     document.getElementById('film4')
 ];
 
-function startMovingVideos() {
-    videos.forEach(v => {
-        // ustawienie początkowej losowej pozycji
-        const w = v.videoWidth || 300;
-        const h = v.videoHeight || 300;
-        v.style.top = Math.random() * (window.innerHeight - h) + 'px';
-        v.style.left = Math.random() * (window.innerWidth - w) + 'px';
-    });
-
-    function moveVideos() {
-        videos.forEach(v => {
-            let top = parseFloat(v.style.top);
-            let left = parseFloat(v.style.left);
-
-            top += (Math.random() - 0.5) * 1.2; // wolny ruch
-            left += (Math.random() - 0.5) * 1.2;
-
-            top = Math.max(0, Math.min(window.innerHeight - v.offsetHeight, top));
-            left = Math.max(0, Math.min(window.innerWidth - v.offsetWidth, left));
-
-            v.style.top = top + 'px';
-            v.style.left = left + 'px';
-        });
-
-        requestAnimationFrame(moveVideos);
-    }
-
-    moveVideos();
-}
+const positions = [];
 
 // Poczekaj aż wszystkie filmy się wczytają
 let loadedCount = 0;
-videos.forEach(v => {
+videos.forEach((v, i) => {
     v.onloadedmetadata = () => {
         loadedCount++;
-        if (loadedCount === videos.length) startMovingVideos();
+        const w = v.videoWidth || 300;
+        const h = v.videoHeight || 300;
+        // ustawienie początkowej losowej pozycji
+        positions[i] = {
+            top: Math.random() * (window.innerHeight - h),
+            left: Math.random() * (window.innerWidth - w),
+            width: w,
+            height: h,
+            dx: (Math.random() - 0.5) * 1, // prędkość pozioma
+            dy: (Math.random() - 0.5) * 1  // prędkość pionowa
+        };
+        v.style.top = positions[i].top + 'px';
+        v.style.left = positions[i].left + 'px';
+        v.style.width = positions[i].width + 'px';
+        v.style.height = positions[i].height + 'px';
+
+        if (loadedCount === videos.length) moveVideos(); // start ruchu po wczytaniu wszystkich
     };
 });
+
+function moveVideos() {
+    videos.forEach((v, i) => {
+        let pos = positions[i];
+
+        pos.top += pos.dy;
+        pos.left += pos.dx;
+
+        // Odbicie od krawędzi
+        if (pos.top <= 0 || pos.top + pos.height >= window.innerHeight) pos.dy *= -1;
+        if (pos.left <= 0 || pos.left + pos.width >= window.innerWidth) pos.dx *= -1;
+
+        v.style.top = pos.top + 'px';
+        v.style.left = pos.left + 'px';
+    });
+
+    requestAnimationFrame(moveVideos);
+}
 
 // przycisk do odtwarzania muzyki
 document.getElementById('playAudioBtn').addEventListener('click', () => {
     const audio = document.getElementById('muzyka');
-    audio.play().catch(err => {
-        alert('Nie udało się odtworzyć muzyki. Spróbuj kliknąć jeszcze raz.');
+    audio.play().catch(() => {
+        alert('Kliknij jeszcze raz, aby odtworzyć muzykę.');
     });
-    document.getElementById('playAudioBtn').style.display = 'none'; // ukrycie przycisku
+    document.getElementById('playAudioBtn').style.display = 'none';
 });
 </script>
 
