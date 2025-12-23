@@ -8,12 +8,8 @@
     body {
         margin: 0;
         height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 40px;
-        animation: kolory 0.5s infinite alternate;
         overflow: hidden;
+        animation: kolory 5s infinite alternate;
     }
 
     @keyframes kolory {
@@ -26,23 +22,58 @@
     }
 
     video {
+        position: absolute;
         width: 300px;
         border-radius: 20px;
-        animation: spin 3s linear infinite;
-    }
-
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to   { transform: rotate(360deg); }
+        object-fit: cover;
     }
 </style>
 </head>
 
 <body>
 
-<video src="film1.mp4" autoplay loop muted></video>
-<video src="film2.mp4" autoplay loop muted></video>
+<audio src="muzyka.mp3" autoplay loop></audio>
+
+<video id="film1" src="film1.mp4" autoplay loop muted></video>
+<video id="film2" src="film2.mp4" autoplay loop muted></video>
+<video id="film3" src="film3.mp4" autoplay loop muted></video>
+<video id="film4" src="film4.mp4" autoplay loop muted></video>
+
+<script>
+const videos = [
+    document.getElementById('film1'),
+    document.getElementById('film2'),
+    document.getElementById('film3'),
+    document.getElementById('film4')
+];
+
+videos.forEach(v => {
+    v.style.top = Math.random() * (window.innerHeight - v.offsetHeight) + 'px';
+    v.style.left = Math.random() * (window.innerWidth - v.offsetWidth) + 'px';
+});
+
+function moveVideos() {
+    videos.forEach(v => {
+        let top = parseFloat(v.style.top);
+        let left = parseFloat(v.style.left);
+
+        top += (Math.random() - 0.5) * 2;
+        left += (Math.random() - 0.5) * 2;
+
+        top = Math.max(0, Math.min(window.innerHeight - v.offsetHeight, top));
+        left = Math.max(0, Math.min(window.innerWidth - v.offsetWidth, left));
+
+        v.style.top = top + 'px';
+        v.style.left = left + 'px';
+    });
+
+    requestAnimationFrame(moveVideos);
+}
+
+moveVideos();
+</script>
 
 </body>
 </html>
+
 
