@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Pliki Michała</title>
+<title>Kolory + Filmiki + Muzyka</title>
 
 <style>
     body {
@@ -27,12 +27,23 @@
         border-radius: 20px;
         object-fit: cover;
     }
+
+    #playAudioBtn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        z-index: 1000;
+        cursor: pointer;
+    }
 </style>
 </head>
 
 <body>
 
-<audio src="muzyka.mp3" autoplay loop></audio>
+<button id="playAudioBtn">Odtwórz muzykę</button>
+<audio id="muzyka" src="muzyka.mp3" loop></audio>
 
 <video id="film1" src="film1.mp4" autoplay loop muted></video>
 <video id="film2" src="film2.mp4" autoplay loop muted></video>
@@ -47,18 +58,20 @@ const videos = [
     document.getElementById('film4')
 ];
 
+// ustawienie początkowej losowej pozycji
 videos.forEach(v => {
-    v.style.top = Math.random() * (window.innerHeight - v.offsetHeight) + 'px';
-    v.style.left = Math.random() * (window.innerWidth - v.offsetWidth) + 'px';
+    v.style.top = Math.random() * (window.innerHeight - 300) + 'px';
+    v.style.left = Math.random() * (window.innerWidth - 300) + 'px';
 });
 
+// ruch filmików
 function moveVideos() {
     videos.forEach(v => {
         let top = parseFloat(v.style.top);
         let left = parseFloat(v.style.left);
 
-        top += (Math.random() - 0.5) * 2;
-        left += (Math.random() - 0.5) * 2;
+        top += (Math.random() - 0.5) * 1.5; // wolny ruch
+        left += (Math.random() - 0.5) * 1.5;
 
         top = Math.max(0, Math.min(window.innerHeight - v.offsetHeight, top));
         left = Math.max(0, Math.min(window.innerWidth - v.offsetWidth, left));
@@ -71,9 +84,13 @@ function moveVideos() {
 }
 
 moveVideos();
+
+// przycisk do odtwarzania muzyki
+document.getElementById('playAudioBtn').addEventListener('click', () => {
+    document.getElementById('muzyka').play();
+    document.getElementById('playAudioBtn').style.display = 'none'; // ukrycie przycisku
+});
 </script>
 
 </body>
 </html>
-
-
