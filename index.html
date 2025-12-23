@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Kolory + Filmiki</title>
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 40px;
+        animation: kolory 0.5s infinite alternate;
+        overflow: hidden;
+    }
+
+    @keyframes kolory {
+        0%   { background: red; }
+        20%  { background: orange; }
+        40%  { background: yellow; }
+        60%  { background: lime; }
+        80%  { background: cyan; }
+        100% { background: magenta; }
+    }
+
+    video {
+        width: 300px;
+        border-radius: 20px;
+        animation: spin 3s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+</style>
+</head>
+
+<body>
+
+<video src="film1.mp4" autoplay loop muted></video>
+<video src="film2.mp4" autoplay loop muted></video>
+
+</body>
+</html>
