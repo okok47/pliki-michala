@@ -6,58 +6,74 @@
 
 <style>
 html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: black;
-    font-family: Arial, sans-serif;
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: black;
+  font-family: Arial, sans-serif;
 }
 
-#player {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: white;
-    border-radius: 50%;
-    z-index: 10;
+#startBtn{
+  position: fixed;
+  inset: 0;
+  background: black;
+  color: white;
+  font-size: 60px;
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
 }
 
-video {
-    position: absolute;
-    width: 200px;
-    pointer-events: none;
+#hud{
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-size: 20px;
+  z-index: 20;
 }
 
-#hud {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    color: white;
-    font-size: 20px;
-    z-index: 20;
+#player{
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  z-index: 10;
 }
 
-#gameover {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    color: white;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    font-size: 40px;
-    z-index: 50;
+video{
+  position: absolute;
+  width: 200px;
+  pointer-events: none;
+}
+
+#gameover{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  color: white;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 40px;
+  z-index: 2000;
+}
+
+#gameover small{
+  font-size: 18px;
+  opacity: 0.8;
+  margin-top: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="hud">Czas: <span id="time">0.0</span>s</div>
+<button id="startBtn">START</button>
 
+<div id="hud">Czas: <span id="time">0.0</span>s</div>
 <div id="player"></div>
 
 <audio id="music" src="muzyka.mp3" loop></audio>
@@ -68,14 +84,15 @@ video {
 <video src="film4.mp4" autoplay loop muted playsinline></video>
 
 <div id="gameover">
-    <div>GAME OVER</div>
-    <div style="font-size:20px;margin-top:10px">Odśwież stronę, aby zagrać ponownie</div>
+  <div>MICHAŁ CIĘ ZWINOGRONOWAŁ</div>
+  <small>Odśwież stronę, aby zagrać ponownie</small>
 </div>
 
 <script>
+const startBtn = document.getElementById("startBtn");
+const music = document.getElementById("music");
 const player = document.getElementById("player");
 const videos = [...document.querySelectorAll("video")];
-const music = document.getElementById("music");
 const timeEl = document.getElementById("time");
 const gameover = document.getElementById("gameover");
 
@@ -83,77 +100,73 @@ let keys = {};
 let alive = true;
 let startTime = null;
 
-let px = window.innerWidth / 2;
-let py = window.innerHeight / 2;
+let px = innerWidth / 2;
+let py = innerHeight / 2;
 const pSpeed = 4;
 
 const size = 200;
 let enemySpeed = 0.6;
 
 const enemies = videos.map(v => ({
-    v,
-    x: Math.random() * (window.innerWidth - size),
-    y: Math.random() * (window.innerHeight - size)
+  v,
+  x: Math.random() * (innerWidth - size),
+  y: Math.random() * (innerHeight - size)
 }));
 
 document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
 document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-// start muzyki po kliknięciu
-document.addEventListener("click", () => {
-    music.volume = 1;
-    music.play();
-}, { once: true });
+startBtn.onclick = () => {
+  music.volume = 1;
+  music.play();
+  startBtn.remove();
+};
 
-function distance(ax, ay, bx, by) {
-    return Math.hypot(ax - bx, ay - by);
+function dist(ax, ay, bx, by){
+  return Math.hypot(ax - bx, ay - by);
 }
 
-function loop(timestamp) {
-    if (!alive) return;
+function loop(ts){
+  if(!alive) return;
 
-    if (!startTime) startTime = timestamp;
-    const t = (timestamp - startTime) / 1000;
-    timeEl.textContent = t.toFixed(1);
+  if(!startTime) startTime = ts;
+  const t = (ts - startTime) / 1000;
+  timeEl.textContent = t.toFixed(1);
 
-    // przyspieszanie wrogów
-    enemySpeed = 0.6 + t * 0.05;
+  enemySpeed = 0.6 + t * 0.05;
 
-    // ruch gracza
-    if (keys["w"] || keys["arrowup"]) py -= pSpeed;
-    if (keys["s"] || keys["arrowdown"]) py += pSpeed;
-    if (keys["a"] || keys["arrowleft"]) px -= pSpeed;
-    if (keys["d"] || keys["arrowright"]) px += pSpeed;
+  if(keys.w || keys.arrowup) py -= pSpeed;
+  if(keys.s || keys.arrowdown) py += pSpeed;
+  if(keys.a || keys.arrowleft) px -= pSpeed;
+  if(keys.d || keys.arrowright) px += pSpeed;
 
-    px = Math.max(0, Math.min(window.innerWidth - 40, px));
-    py = Math.max(0, Math.min(window.innerHeight - 40, py));
+  px = Math.max(0, Math.min(innerWidth - 40, px));
+  py = Math.max(0, Math.min(innerHeight - 40, py));
 
-    player.style.left = px + "px";
-    player.style.top = py + "px";
+  player.style.left = px + "px";
+  player.style.top  = py + "px";
 
-    // wrogowie gonią gracza
-    enemies.forEach(e => {
-        let dx = px - e.x;
-        let dy = py - e.y;
-        let len = Math.hypot(dx, dy);
-        dx /= len;
-        dy /= len;
+  enemies.forEach(e => {
+    let dx = px - e.x;
+    let dy = py - e.y;
+    let len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
 
-        e.x += dx * enemySpeed;
-        e.y += dy * enemySpeed;
+    e.x += dx * enemySpeed;
+    e.y += dy * enemySpeed;
 
-        e.v.style.left = e.x + "px";
-        e.v.style.top = e.y + "px";
+    e.v.style.left = e.x + "px";
+    e.v.style.top  = e.y + "px";
 
-        // kolizja
-        if (distance(px + 20, py + 20, e.x + size/2, e.y + size/2) < size/2) {
-            alive = false;
-            gameover.style.display = "flex";
-            music.pause();
-        }
-    });
+    if(dist(px + 20, py + 20, e.x + size/2, e.y + size/2) < size/2){
+      alive = false;
+      music.pause();
+      gameover.style.display = "flex";
+    }
+  });
 
-    requestAnimationFrame(loop);
+  requestAnimationFrame(loop);
 }
 
 requestAnimationFrame(loop);
@@ -161,4 +174,3 @@ requestAnimationFrame(loop);
 
 </body>
 </html>
-
