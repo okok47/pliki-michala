@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>FILMY</title>
+<title>FILMY CIĘ GONIĄ</title>
 
 <style>
 html, body {
@@ -11,29 +11,54 @@ html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
+    background: black;
+    font-family: Arial, sans-serif;
 }
 
-body {
-    animation: bg 4s linear infinite;
-}
-
-@keyframes bg {
-    0% { background: red; }
-    25% { background: blue; }
-    50% { background: green; }
-    75% { background: purple; }
-    100% { background: red; }
+#player {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 50%;
+    z-index: 10;
 }
 
 video {
     position: absolute;
-    width: 280px;
+    width: 200px;
     pointer-events: none;
+}
+
+#hud {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    color: white;
+    font-size: 20px;
+    z-index: 20;
+}
+
+#gameover {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-size: 40px;
+    z-index: 50;
 }
 </style>
 </head>
 
 <body>
+
+<div id="hud">Czas: <span id="time">0.0</span>s</div>
+
+<div id="player"></div>
 
 <audio id="music" src="muzyka.mp3" loop></audio>
 
@@ -42,68 +67,97 @@ video {
 <video src="film3.mp4" autoplay loop muted playsinline></video>
 <video src="film4.mp4" autoplay loop muted playsinline></video>
 
-<script>
-const videos = [...document.querySelectorAll("video")];
-const size = 280;
+<div id="gameover">
+    <div>GAME OVER</div>
+    <div style="font-size:20px;margin-top:10px">Odśwież stronę, aby zagrać ponownie</div>
+</div>
 
-const objs = videos.map(v => ({
+<script>
+const player = document.getElementById("player");
+const videos = [...document.querySelectorAll("video")];
+const music = document.getElementById("music");
+const timeEl = document.getElementById("time");
+const gameover = document.getElementById("gameover");
+
+let keys = {};
+let alive = true;
+let startTime = null;
+
+let px = window.innerWidth / 2;
+let py = window.innerHeight / 2;
+const pSpeed = 4;
+
+const size = 200;
+let enemySpeed = 0.6;
+
+const enemies = videos.map(v => ({
     v,
     x: Math.random() * (window.innerWidth - size),
-    y: Math.random() * (window.innerHeight - size),
-    dx: (Math.random() < 0.5 ? -1 : 1) * 1.5,
-    dy: (Math.random() < 0.5 ? -1 : 1) * 1.5
+    y: Math.random() * (window.innerHeight - size)
 }));
 
-function overlap(a, b) {
-    return (
-        a.x < b.x + size &&
-        a.x + size > b.x &&
-        a.y < b.y + size &&
-        a.y + size > b.y
-    );
+document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+// start muzyki po kliknięciu
+document.addEventListener("click", () => {
+    music.volume = 1;
+    music.play();
+}, { once: true });
+
+function distance(ax, ay, bx, by) {
+    return Math.hypot(ax - bx, ay - by);
 }
 
-function loop() {
-    for (let i = 0; i < objs.length; i++) {
-        let o = objs[i];
+function loop(timestamp) {
+    if (!alive) return;
 
-        o.x += o.dx;
-        o.y += o.dy;
+    if (!startTime) startTime = timestamp;
+    const t = (timestamp - startTime) / 1000;
+    timeEl.textContent = t.toFixed(1);
 
-        // ściany
-        if (o.x <= 0 || o.x >= window.innerWidth - size) o.dx *= -1;
-        if (o.y <= 0 || o.y >= window.innerHeight - size) o.dy *= -1;
+    // przyspieszanie wrogów
+    enemySpeed = 0.6 + t * 0.05;
 
-        // kolizje z innymi
-        for (let j = i + 1; j < objs.length; j++) {
-            let p = objs[j];
-            if (overlap(o, p)) {
-                o.dx *= -1;
-                o.dy *= -1;
-                p.dx *= -1;
-                p.dy *= -1;
-            }
+    // ruch gracza
+    if (keys["w"] || keys["arrowup"]) py -= pSpeed;
+    if (keys["s"] || keys["arrowdown"]) py += pSpeed;
+    if (keys["a"] || keys["arrowleft"]) px -= pSpeed;
+    if (keys["d"] || keys["arrowright"]) px += pSpeed;
+
+    px = Math.max(0, Math.min(window.innerWidth - 40, px));
+    py = Math.max(0, Math.min(window.innerHeight - 40, py));
+
+    player.style.left = px + "px";
+    player.style.top = py + "px";
+
+    // wrogowie gonią gracza
+    enemies.forEach(e => {
+        let dx = px - e.x;
+        let dy = py - e.y;
+        let len = Math.hypot(dx, dy);
+        dx /= len;
+        dy /= len;
+
+        e.x += dx * enemySpeed;
+        e.y += dy * enemySpeed;
+
+        e.v.style.left = e.x + "px";
+        e.v.style.top = e.y + "px";
+
+        // kolizja
+        if (distance(px + 20, py + 20, e.x + size/2, e.y + size/2) < size/2) {
+            alive = false;
+            gameover.style.display = "flex";
+            music.pause();
         }
-
-        o.v.style.left = o.x + "px";
-        o.v.style.top = o.y + "px";
-    }
+    });
 
     requestAnimationFrame(loop);
 }
 
-loop();
-
-// MUZYKA — 100% PEWNE ODPALENIE
-document.addEventListener("click", () => {
-    const m = document.getElementById("music");
-    m.volume = 1;
-    m.play();
-}, { once: true });
+requestAnimationFrame(loop);
 </script>
 
 </body>
 </html>
-
-
-
