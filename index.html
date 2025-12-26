@@ -2,36 +2,34 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>FPS – Filmiki Attack</title>
+<title>okk</title>
 <style>
-  body { margin: 0; overflow: hidden; background: black; }
-  #hud {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    color: white;
-    font-family: Arial;
-    font-size: 18px;
-    z-index: 10;
-  }
-  #start {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: black;
-    color: white;
-    font-size: 32px;
-    cursor: pointer;
-    z-index: 20;
-  }
+body { margin:0; overflow:hidden; background:black; }
+#start {
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; color:white; background:black;
+  cursor:pointer; z-index:10;
+}
+#hud {
+  position:fixed; top:10px; left:10px;
+  color:white; font-family:Arial;
+  z-index:5;
+}
+#crosshair {
+  position:fixed; top:50%; left:50%;
+  width:10px; height:10px;
+  margin:-5px;
+  border:2px solid white;
+  z-index:5;
+}
 </style>
 </head>
 <body>
 
-<div id="hud">HP: <span id="hp">100</span> | Fala: <span id="wave">1</span></div>
 <div id="start">KLIKNIJ ABY START</div>
+<div id="hud">Fala: <span id="wave">1</span></div>
+<div id="crosshair"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
 
@@ -39,21 +37,27 @@
 let scene, camera, renderer;
 let enemies = [];
 let wave = 1;
-let playerHP = 100;
+let keys = {};
 let canShoot = true;
 
-const enemyVideos = ["film1.mp4","film2.mp4","film3.mp4","film4.mp4"];
+const videos = ["film1.mp4","film2.mp4","film3.mp4","film4.mp4"];
 
-const startBtn = document.getElementById("start");
+const music = new Audio("muzyka.mp3");
+music.loop = true;
+music.volume = 1;
 
-startBtn.onclick = () => {
-  startBtn.remove();
+document.getElementById("start").onclick = async () => {
+  document.getElementById("start").remove();
   init();
-  animate();
+  spawnWave();
+
+  try { await music.play(); } catch(e){ alert("MUZYKA NIE GRA – ZŁY PLIK"); }
+
   document.body.requestPointerLock();
+  animate();
 };
 
-function init() {
+function init(){
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
@@ -63,91 +67,70 @@ function init() {
   renderer.setSize(innerWidth, innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  const light = new THREE.DirectionalLight(0xffffff, 1);
+  const light = new THREE.DirectionalLight(0xffffff,1);
   light.position.set(5,10,5);
   scene.add(light);
 
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(200,200),
-    new THREE.MeshStandardMaterial({color: 0x222222})
+    new THREE.MeshStandardMaterial({color:0x222222})
   );
   floor.rotation.x = -Math.PI/2;
   scene.add(floor);
-
-  spawnWave();
 }
 
-function spawnWave() {
-  enemies.length = 0;
-
-  for(let i=0;i<wave+2;i++){
-    spawnEnemy();
-  }
+function spawnWave(){
+  enemies = [];
+  for(let i=0;i<wave+2;i++) spawnEnemy();
 }
 
-function spawnEnemy() {
-  const video = document.createElement("video");
-  video.src = enemyVideos[Math.floor(Math.random()*enemyVideos.length)];
-  video.loop = true;
-  video.muted = true;
-  video.play();
+function spawnEnemy(){
+  const v = document.createElement("video");
+  v.src = videos[Math.floor(Math.random()*videos.length)];
+  v.loop = true; v.muted = true; v.play();
 
-  const texture = new THREE.VideoTexture(video);
-
-  const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2,2), mat);
-
-  mesh.position.set(
-    (Math.random()-0.5)*30,
-    1.5,
-    (Math.random()-0.5)*30
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(2,2),
+    new THREE.MeshBasicMaterial({map:new THREE.VideoTexture(v), side:THREE.DoubleSide})
   );
 
-  mesh.userData = {
-    hp: 30 + wave*20,
-    speed: 0.01 + wave*0.003
-  };
+  mesh.position.set((Math.random()-0.5)*30,1.5,(Math.random()-0.5)*30);
+  mesh.userData = { hits: wave, speed: 0.01 + wave*0.003 };
 
   scene.add(mesh);
   enemies.push(mesh);
 }
 
-window.addEventListener("mousedown", () => {
+document.addEventListener("mousedown", ()=>{
   if(!canShoot) return;
   canShoot = false;
 
   const ray = new THREE.Raycaster();
   ray.setFromCamera(new THREE.Vector2(0,0), camera);
-  const hits = ray.intersectObjects(enemies);
+  const hit = ray.intersectObjects(enemies)[0];
 
-  if(hits.length){
-    const e = hits[0].object;
-    e.userData.hp -= 50;
-
-    if(e.userData.hp <= 0){
-      scene.remove(e);
-      enemies.splice(enemies.indexOf(e),1);
+  if(hit){
+    hit.object.userData.hits--;
+    if(hit.object.userData.hits <= 0){
+      scene.remove(hit.object);
+      enemies.splice(enemies.indexOf(hit.object),1);
     }
   }
-
   setTimeout(()=>canShoot=true,300);
 });
 
-function animate() {
+function animate(){
   requestAnimationFrame(animate);
+
+  const speed = 0.1;
+  if(keys["w"]) camera.position.z -= speed;
+  if(keys["s"]) camera.position.z += speed;
+  if(keys["a"]) camera.position.x -= speed;
+  if(keys["d"]) camera.position.x += speed;
 
   enemies.forEach(e=>{
     e.lookAt(camera.position);
     e.position.lerp(camera.position, e.userData.speed);
-
-    if(e.position.distanceTo(camera.position) < 1.2){
-      playerHP -= 0.2 * wave;
-      document.getElementById("hp").textContent = Math.max(0,Math.floor(playerHP));
-      if(playerHP <= 0){
-        alert("MICHAŁ cie ZWINOGRONOWAŁ");
-        location.reload();
-      }
-    }
   });
 
   if(enemies.length === 0){
@@ -156,22 +139,25 @@ function animate() {
     spawnWave();
   }
 
-  renderer.render(scene, camera);
+  renderer.render(scene,camera);
 }
 
-window.addEventListener("mousemove", e=>{
+document.addEventListener("mousemove", e=>{
   if(document.pointerLockElement){
-    camera.rotation.y -= e.movementX * 0.002;
-    camera.rotation.x -= e.movementY * 0.002;
-    camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x));
+    camera.rotation.y -= e.movementX*0.002;
+    camera.rotation.x -= e.movementY*0.002;
+    camera.rotation.x = Math.max(-1.5,Math.min(1.5,camera.rotation.x));
   }
 });
 
-window.addEventListener("resize", ()=>{
+document.addEventListener("keydown", e=>keys[e.key.toLowerCase()]=true);
+document.addEventListener("keyup", e=>keys[e.key.toLowerCase()]=false);
+
+window.onresize = ()=>{
   camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
+  renderer.setSize(innerWidth,innerHeight);
+};
 </script>
 </body>
 </html>
